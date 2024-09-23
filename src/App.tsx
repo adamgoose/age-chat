@@ -2,8 +2,11 @@ import { useContext, useState } from "react";
 import { AgeContext } from "./contexts/AgeContext";
 import { PeerContext } from "./contexts/PeerContext";
 import { HistoryContext } from "./contexts/HistoryContext";
+import { useSearchParams } from "react-router-dom";
 
 function App() {
+  const [search] = useSearchParams();
+
   const age = useContext(AgeContext);
   const peer = useContext(PeerContext);
   const history = useContext(HistoryContext);
@@ -21,7 +24,7 @@ function App() {
       <div>Peer ID: {age.recipient}</div>
       <div>PeerOpen: {peer.peerOpen ? "yes" : "no"}</div>
       <div>ConnOpen: {peer.connOpen ? "yes" : "no"}</div>
-      {window.location.search != "?anonymous" && (
+      {!search.has("anonymous") && (
         <>
           <button
             onClick={() => {

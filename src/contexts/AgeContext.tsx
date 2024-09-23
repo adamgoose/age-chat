@@ -1,4 +1,5 @@
 import { createContext, PropsWithChildren, useRef, useState } from "react";
+import { useParams, useSearchParams } from "react-router-dom";
 
 export type AgeContextData = {
   keyPair: React.MutableRefObject<{
@@ -19,15 +20,17 @@ export type AgeContextData = {
 export const AgeContext = createContext<AgeContextData>({} as AgeContextData);
 
 export const AgeContextProvider = (props: PropsWithChildren<object>) => {
-  const path = window.location.pathname;
+  const params = useParams();
+  const [search] = useSearchParams();
+
   const [recipient, setRecipient] = useState<string | undefined>(
-    path.length > 1 ? path.substring(1) : undefined,
+    params.recipient,
   );
 
   const keyPair = useRef(
     (() => {
       const saved = window.localStorage.getItem("age.keypair");
-      if (!saved || window.location.search == "?anonymous") {
+      if (!saved || search.has("anonymous")) {
         return window.generateX25519Identity();
       }
 

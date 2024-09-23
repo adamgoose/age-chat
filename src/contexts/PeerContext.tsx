@@ -9,6 +9,7 @@ import {
 import { AgeContext } from "./AgeContext";
 import Peer, { DataConnection } from "peerjs";
 import { HistoryContext } from "./HistoryContext";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 export type PeerContextData = {
   peer?: Peer;
@@ -20,6 +21,9 @@ export type PeerContextData = {
 export const PeerContext = createContext({} as PeerContextData);
 
 export const PeerContextProvider = (props: PropsWithChildren<object>) => {
+  const navigate = useNavigate();
+  const [search] = useSearchParams();
+
   const age = useContext(AgeContext);
   const history = useContext(HistoryContext);
 
@@ -33,6 +37,11 @@ export const PeerContextProvider = (props: PropsWithChildren<object>) => {
       conn.on("open", () => {
         console.log("[conn] Opened");
         setConnOpen(true);
+
+        navigate(
+          { pathname: "/" + conn.peer, search: search.toString() },
+          { replace: true },
+        );
 
         history.pushEvent({
           type: "connection_open",
@@ -97,7 +106,7 @@ export const PeerContextProvider = (props: PropsWithChildren<object>) => {
         // peerRef.current = undefined;
       }
     };
-  }, [age, history]);
+  }, [navigate, search, age, history]);
 
   return (
     <PeerContext.Provider
