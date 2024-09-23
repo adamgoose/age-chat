@@ -8,44 +8,56 @@ import {
 } from "react";
 import { AgeContext } from "./AgeContext";
 import Peer, { DataConnection } from "peerjs";
+import { HistoryContext } from "./HistoryContext";
 
 export type PeerContextData = {
   peer?: Peer;
   peerOpen: boolean;
   conn?: DataConnection;
   connOpen: boolean;
-  setOnMessage: (onMessage: (data: string) => void) => void;
 };
 
 export const PeerContext = createContext({} as PeerContextData);
 
 export const PeerContextProvider = (props: PropsWithChildren<object>) => {
   const age = useContext(AgeContext);
+  const history = useContext(HistoryContext);
 
   const peerRef = useRef<Peer | undefined>();
   const [peerOpen, setPeerOpen] = useState(false);
   const connRef = useRef<DataConnection | undefined>();
   const [connOpen, setConnOpen] = useState(false);
 
-  const onMessage = useRef<(data: string) => void>(() => { });
-  const setOnMessage = (h: (data: string) => void) => {
-    onMessage.current = h;
-  };
-
   useEffect(() => {
     const handleConnection = (conn: DataConnection) => {
       conn.on("open", () => {
         console.log("[conn] Opened");
         setConnOpen(true);
+
+        history.pushEvent({
+          type: "connection_open",
+          from: conn.peer,
+          mnemonic: window.mnemonic(age.keyPair.current.publicKey, conn.peer)
+            .output,
+        });
       });
       conn.on("close", () => {
         console.log("[conn] Closed");
         setConnOpen(false);
-        age.clearRecipient();
+        age.setRecipient(undefined);
+
+        history.pushEvent({
+          type: "connection_close",
+          from: conn.peer,
+        });
       });
       conn.on("data", (data) => {
         console.log("[conn] Data Received", data);
-        onMessage.current(age.decrypt(data as string)!);
+        history.pushEvent({
+          type: "message",
+          from: conn.peer,
+          message: age.decrypt(data as string)!,
+        });
       });
       connRef.current = conn;
     };
@@ -56,7 +68,6 @@ export const PeerContextProvider = (props: PropsWithChildren<object>) => {
         console.log("[peer] Connected:", id);
         setPeerOpen(true);
 
-        // TODO:consider connecting to the target recipient
         if (age.recipient) {
           console.log("Opening connection to peer:", age.recipient);
           const conn = peer.connect(age.recipient);
@@ -86,7 +97,7 @@ export const PeerContextProvider = (props: PropsWithChildren<object>) => {
         // peerRef.current = undefined;
       }
     };
-  }, [age]);
+  }, [age, history]);
 
   return (
     <PeerContext.Provider
@@ -95,7 +106,6 @@ export const PeerContextProvider = (props: PropsWithChildren<object>) => {
         peerOpen,
         conn: connRef.current,
         connOpen,
-        setOnMessage,
       }}
     >
       {props.children}

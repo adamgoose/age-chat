@@ -1,10 +1,4 @@
-import {
-  createContext,
-  PropsWithChildren,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { createContext, PropsWithChildren, useRef, useState } from "react";
 
 export type AgeContextData = {
   keyPair: React.MutableRefObject<{
@@ -15,10 +9,8 @@ export type AgeContextData = {
   saveLocalKeys: () => void;
   clearLocalKeys: () => void;
 
-  mnemonic?: string;
   recipient?: string;
-  setRecipient: (r: string) => void;
-  clearRecipient: () => void;
+  setRecipient: (r: string | undefined) => void;
 
   encrypt: (input: string) => string | undefined;
   decrypt: (input: string) => string | undefined;
@@ -28,14 +20,9 @@ export const AgeContext = createContext<AgeContextData>({} as AgeContextData);
 
 export const AgeContextProvider = (props: PropsWithChildren<object>) => {
   const path = window.location.pathname;
-  const [mnemonic, setMnemonic] = useState<string | undefined>();
   const [recipient, setRecipient] = useState<string | undefined>(
     path.length > 1 ? path.substring(1) : undefined,
   );
-  const clearRecipient = () => {
-    setRecipient(undefined);
-    setMnemonic(undefined);
-  };
 
   const keyPair = useRef(
     (() => {
@@ -67,22 +54,14 @@ export const AgeContextProvider = (props: PropsWithChildren<object>) => {
     window.localStorage.removeItem("age.keypair");
   };
 
-  useEffect(() => {
-    if (!recipient) return;
-
-    setMnemonic(window.mnemonic(keyPair.current.publicKey, recipient).output);
-  }, [recipient]);
-
   return (
     <AgeContext.Provider
       value={{
         keyPair,
         saveLocalKeys,
         clearLocalKeys,
-        mnemonic,
         recipient,
         setRecipient,
-        clearRecipient,
         encrypt,
         decrypt,
       }}
