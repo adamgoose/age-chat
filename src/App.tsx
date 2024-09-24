@@ -2,7 +2,9 @@ import { Button } from "./components/ui/button";
 import {
   Cloud,
   CloudOff,
+  FileIcon,
   FileKey2,
+  FileUp,
   InfoIcon,
   Link,
   MessageCircle,
@@ -30,6 +32,7 @@ export default function App() {
   const peer = useContext(PeerContext);
   const history = useContext(HistoryContext);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const uploadRef = useRef<HTMLInputElement>(null);
 
   const [, copyToClipboard] = useCopyToClipboard();
   const [message, setMessage] = useState("");
@@ -39,13 +42,63 @@ export default function App() {
   const sendMessage = () => {
     if (!message) return;
 
-    peer.conn?.send(age.encrypt(message));
+    peer.conn?.send({
+      type: "message",
+      message: age.encrypt(message),
+    });
     history.pushEvent({
       type: "message",
       from: age.keyPair.current.publicKey,
       message,
     });
     setMessage("");
+  };
+
+  const sendFile = async () => {
+    if (!uploadRef.current) return;
+    if (!uploadRef.current.files) return;
+
+    const file = uploadRef.current.files[0];
+    const buffer = new Uint8Array(await file.arrayBuffer());
+    const encrypted = window.encryptBinary(age.recipient!, buffer);
+
+    peer.conn?.send({
+      type: "file",
+      filename: file.name,
+      size: file.size,
+      mime: file.type,
+      encrypted,
+    });
+    history.pushEvent({
+      type: "file",
+      from: age.keyPair.current.publicKey,
+      filename: file.name,
+      size: file.size,
+      mime: file.type,
+      decrypted: buffer,
+    });
+  };
+
+  const formatBytes = (bytes: number, decimals = 2) => {
+    if (!+bytes) return "0 Bytes";
+
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = [
+      "Bytes",
+      "KiB",
+      "MiB",
+      "GiB",
+      "TiB",
+      "PiB",
+      "EiB",
+      "ZiB",
+      "YiB",
+    ];
+
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
   };
 
   useEffect(() => {
@@ -179,6 +232,42 @@ export default function App() {
                     </TooltipContent>
                   </Tooltip>
                 )}
+                {event.type == "file" && (
+                  <Alert
+                    className={cn("cursor-pointer w-auto", {
+                      "justify-self-end":
+                        event.from == age.keyPair.current.publicKey,
+                      "justify-self-start":
+                        event.from != age.keyPair.current.publicKey,
+                    })}
+                    iconAlignment={
+                      event.from == age.keyPair.current.publicKey
+                        ? "right"
+                        : "left"
+                    }
+                    onClick={() => {
+                      const blob = new Blob([event.decrypted.buffer], {
+                        type: event.mime,
+                      });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement("a");
+                      a.href = url;
+                      a.download = event.filename;
+                      a.click();
+                      URL.revokeObjectURL(url);
+                    }}
+                  >
+                    <FileIcon className="h-4 w-4" />
+                    <AlertTitle>
+                      {event.filename} ({formatBytes(event.size)})
+                    </AlertTitle>
+                    <AlertDescription className="text-gray-500">
+                      {event.from == age.keyPair.current.publicKey && `me - `}
+                      {event.timestamp.toLocaleTimeString()}
+                      {event.from != age.keyPair.current.publicKey && ` - peer`}
+                    </AlertDescription>
+                  </Alert>
+                )}
               </div>
             ))}
           </div>
@@ -197,6 +286,21 @@ export default function App() {
           <Button variant="outline" size="icon" onClick={sendMessage}>
             <Send className="h-4 w-4" />
           </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => {
+              uploadRef.current?.click();
+            }}
+          >
+            <FileUp className="h-4 w-4" />
+          </Button>
+          <input
+            type="file"
+            className="hidden"
+            ref={uploadRef}
+            onChange={sendFile}
+          />
         </div>
       </div>
       <Toaster position="top-center" />

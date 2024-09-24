@@ -7,6 +7,7 @@ export type HistoryContextData = {
 
 export type HistoryEvent =
   | MessageEvent
+  | FileEvent
   | ConnectionOpenEvent
   | ConnectionCloseEvent;
 
@@ -18,6 +19,15 @@ export type MessageEvent = {
   type: "message";
   from: string;
   message: string;
+};
+
+export type FileEvent = {
+  type: "file";
+  from: string;
+  filename: string;
+  size: number;
+  mime: string;
+  decrypted: Uint8Array;
 };
 
 export type ConnectionOpenEvent = {

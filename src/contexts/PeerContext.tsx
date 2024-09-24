@@ -62,11 +62,27 @@ export const PeerContextProvider = (props: PropsWithChildren<object>) => {
       });
       conn.on("data", (data) => {
         console.log("[conn] Data Received", data);
-        history.pushEvent({
-          type: "message",
-          from: conn.peer,
-          message: age.decrypt(data as string)!,
-        });
+
+        const d = data as Record<string, unknown>;
+        if (d.type == "message") {
+          history.pushEvent({
+            type: "message",
+            from: conn.peer,
+            message: age.decrypt(d.message as string)!,
+          });
+        } else if (d.type == "file") {
+          history.pushEvent({
+            type: "file",
+            from: conn.peer,
+            filename: d.filename as string,
+            size: d.size as number,
+            mime: d.mime as string,
+            decrypted: window.decryptBinary(
+              age.keyPair.current.privateKey,
+              d.encrypted as Uint8Array,
+            ),
+          });
+        }
       });
       connRef.current = conn;
     };
