@@ -260,15 +260,13 @@ export default function App() {
                         }}
                       >
                         <FileIcon className="h-4 w-4" />
-                        <AlertTitle>
-                          {event.filename} ({formatBytes(event.size)})
-                        </AlertTitle>
+                        <AlertTitle>{event.filename}</AlertTitle>
                         <AlertDescription className="text-gray-500">
                           {event.from == age.keyPair.current.publicKey &&
-                            `me - `}
+                            `me - ${formatBytes(event.size)} - `}
                           {event.timestamp.toLocaleTimeString()}
                           {event.from != age.keyPair.current.publicKey &&
-                            ` - peer`}
+                            ` - ${formatBytes(event.size)} - peer`}
                         </AlertDescription>
                       </Alert>
                     </TooltipTrigger>
