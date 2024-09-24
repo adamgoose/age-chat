@@ -233,40 +233,55 @@ export default function App() {
                   </Tooltip>
                 )}
                 {event.type == "file" && (
-                  <Alert
-                    className={cn("cursor-pointer w-auto", {
-                      "justify-self-end":
-                        event.from == age.keyPair.current.publicKey,
-                      "justify-self-start":
-                        event.from != age.keyPair.current.publicKey,
-                    })}
-                    iconAlignment={
-                      event.from == age.keyPair.current.publicKey
-                        ? "right"
-                        : "left"
-                    }
-                    onClick={() => {
-                      const blob = new Blob([event.decrypted.buffer], {
-                        type: event.mime,
-                      });
-                      const url = URL.createObjectURL(blob);
-                      const a = document.createElement("a");
-                      a.href = url;
-                      a.download = event.filename;
-                      a.click();
-                      URL.revokeObjectURL(url);
-                    }}
-                  >
-                    <FileIcon className="h-4 w-4" />
-                    <AlertTitle>
-                      {event.filename} ({formatBytes(event.size)})
-                    </AlertTitle>
-                    <AlertDescription className="text-gray-500">
-                      {event.from == age.keyPair.current.publicKey && `me - `}
-                      {event.timestamp.toLocaleTimeString()}
-                      {event.from != age.keyPair.current.publicKey && ` - peer`}
-                    </AlertDescription>
-                  </Alert>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Alert
+                        className={cn("cursor-pointer w-auto", {
+                          "justify-self-end":
+                            event.from == age.keyPair.current.publicKey,
+                          "justify-self-start":
+                            event.from != age.keyPair.current.publicKey,
+                        })}
+                        iconAlignment={
+                          event.from == age.keyPair.current.publicKey
+                            ? "right"
+                            : "left"
+                        }
+                        onClick={() => {
+                          const blob = new Blob([event.decrypted.buffer], {
+                            type: event.mime,
+                          });
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement("a");
+                          a.href = url;
+                          a.download = event.filename;
+                          a.click();
+                          URL.revokeObjectURL(url);
+                        }}
+                      >
+                        <FileIcon className="h-4 w-4" />
+                        <AlertTitle>
+                          {event.filename} ({formatBytes(event.size)})
+                        </AlertTitle>
+                        <AlertDescription className="text-gray-500">
+                          {event.from == age.keyPair.current.publicKey &&
+                            `me - `}
+                          {event.timestamp.toLocaleTimeString()}
+                          {event.from != age.keyPair.current.publicKey &&
+                            ` - peer`}
+                        </AlertDescription>
+                      </Alert>
+                    </TooltipTrigger>
+                    <TooltipContent
+                      side={
+                        event.from == age.keyPair.current.publicKey
+                          ? "left"
+                          : "right"
+                      }
+                    >
+                      <p>Click to download</p>
+                    </TooltipContent>
+                  </Tooltip>
                 )}
               </div>
             ))}
