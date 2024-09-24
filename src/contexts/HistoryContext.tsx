@@ -1,7 +1,7 @@
 import { createContext, PropsWithChildren, useState } from "react";
 
 export type HistoryContextData = {
-  events: HistoryEvent[];
+  events: HistoryEventWithTimestamp[];
   pushEvent: (event: HistoryEvent) => void;
 };
 
