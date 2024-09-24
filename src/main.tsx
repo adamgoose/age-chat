@@ -6,7 +6,7 @@ import { LoadWasm } from "./wasm";
 import { HistoryContextProvider } from "./contexts/HistoryContext";
 import { AgeContextProvider } from "./contexts/AgeContext";
 import { PeerContextProvider } from "./contexts/PeerContext";
-import PrettyApp from "./PrettyApp";
+import App from "./App";
 import "./index.css";
 import { ThemeProvider } from "next-themes";
 import { TooltipProvider } from "./components/ui/tooltip";
@@ -26,7 +26,7 @@ export const router = createBrowserRouter([
     children: [
       {
         path: "/:recipient?",
-        element: <PrettyApp />,
+        element: <App />,
       },
     ],
   },

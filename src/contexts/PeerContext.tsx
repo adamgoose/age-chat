@@ -99,14 +99,18 @@ export const PeerContextProvider = (props: PropsWithChildren<object>) => {
 
       peerRef.current = peer;
     }
-
-    return () => {
-      if (peerRef.current) {
-        // peerRef.current.destroy();
-        // peerRef.current = undefined;
-      }
-    };
   }, [navigate, search, age, history]);
+
+  window.addEventListener("beforeunload", () => {
+    if (connRef.current) {
+      connRef.current.close();
+      connRef.current = undefined;
+    }
+    if (peerRef.current) {
+      peerRef.current.destroy();
+      peerRef.current = undefined;
+    }
+  });
 
   return (
     <PeerContext.Provider
